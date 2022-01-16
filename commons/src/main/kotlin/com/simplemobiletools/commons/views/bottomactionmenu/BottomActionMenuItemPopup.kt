@@ -11,6 +11,8 @@ import android.widget.ListView
 import android.widget.PopupWindow
 import androidx.core.content.ContextCompat
 import androidx.core.widget.PopupWindowCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.simplemobiletools.commons.R
 import com.simplemobiletools.commons.extensions.applyColorFilter
 import com.simplemobiletools.commons.extensions.windowManager
@@ -36,28 +38,11 @@ class BottomActionMenuItemPopup(
     val isShowing: Boolean
         get() = popup.isShowing
 
-    private val popupListAdapter = object : ArrayAdapter<BottomActionMenuItem>(context, R.layout.item_action_mode_popup, items) {
-        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-            var view = convertView
-            if (view == null) {
-                view = LayoutInflater.from(context).inflate(R.layout.item_action_mode_popup, parent, false)
-            }
-
-            val item = items[position]
-            view!!.cab_item.text = item.title
-            if (item.icon != View.NO_ID) {
-                val icon = ContextCompat.getDrawable(context, item.icon)
-                icon?.applyColorFilter(Color.WHITE)
-                view.cab_item.setCompoundDrawablesWithIntrinsicBounds(icon, null, null, null)
-            }
-
-            view.setOnClickListener {
-                onSelect.invoke(item)
-                popup.dismiss()
-            }
-
-            return view
-        }
+    private val popupListAdapter = BottomActionItemPopupAdapter {
+        onSelect.invoke(it)
+        popup.dismiss()
+    }.apply {
+        submitList(items)
     }
 
     init {
@@ -71,6 +56,7 @@ class BottomActionMenuItemPopup(
 
     fun show(anchorView: View) {
         this.anchorView = anchorView
+        popupListAdapter.submitList(items)
         buildDropDown()
         PopupWindowCompat.setWindowLayoutType(popup, WindowManager.LayoutParams.TYPE_APPLICATION_SUB_PANEL)
         popup.isOutsideTouchable = true
@@ -105,16 +91,16 @@ class BottomActionMenuItemPopup(
 
     private fun buildDropDown() {
         var otherHeights = 0
-        val dropDownList = ListView(context).apply {
+        val dropDownList = RecyclerView(context).apply {
             adapter = popupListAdapter
             isFocusable = true
-            divider = null
             isFocusableInTouchMode = true
             clipToPadding = false
             isVerticalScrollBarEnabled = true
             isHorizontalScrollBarEnabled = false
             clipToOutline = true
             elevation = 3f
+            layoutManager = LinearLayoutManager(context)
             setPaddingRelative(popupPaddingStart, popupPaddingTop, popupPaddingEnd, popupPaddingBottom)
         }
 
@@ -125,20 +111,25 @@ class BottomActionMenuItemPopup(
         }
 
         val width = measureMenuSizeAndGetWidth((0.8 * screenWidth).toInt())
-        updateContentWidth(width)
-        popup.contentView = dropDownList
+        val popupBackground = popup.background
+        dropDownWidth = if (popupBackground != null) {
+            popupBackground.getPadding(tempRect)
+            tempRect.left + tempRect.right + width
+        } else {
+            width
+        }
 
         // getMaxAvailableHeight() subtracts the padding, so we put it back
         // to get the available height for the whole window.
-        val padding: Int
-        val popupBackground = popup.background
-        padding = if (popupBackground != null) {
+        val padding: Int = if (popupBackground != null) {
             popupBackground.getPadding(tempRect)
             tempRect.top + tempRect.bottom
         } else {
             tempRect.setEmpty()
             0
         }
+
+        popup.contentView = dropDownList
 
         val maxHeight = popup.getMaxAvailableHeight(anchorView!!, 0)
         val listContent = measureHeightOfChildrenCompat(maxHeight - otherHeights)
@@ -151,66 +142,52 @@ class BottomActionMenuItemPopup(
         dropDownList.layoutParams = ViewGroup.LayoutParams(dropDownWidth, dropDownHeight)
     }
 
-    private fun updateContentWidth(width: Int) {
-        val popupBackground = popup.background
-        dropDownWidth = if (popupBackground != null) {
-            popupBackground.getPadding(tempRect)
-            tempRect.left + tempRect.right + width
-        } else {
-            width
-        }
-    }
-
     /**
      * @see androidx.appcompat.widget.DropDownListView.measureHeightOfChildrenCompat
      */
     private fun measureHeightOfChildrenCompat(maxHeight: Int): Int {
         val parent = FrameLayout(context)
-        val widthMeasureSpec = MeasureSpec.makeMeasureSpec(dropDownWidth, MeasureSpec.EXACTLY)
+        val widthMeasureSpec = MeasureSpec.makeMeasureSpec(dropDownWidth, View.MeasureSpec.EXACTLY)
 
         // Include the padding of the list
         var returnedHeight = 0
 
-        val count = popupListAdapter.count
-
-        var child: View? = null
-        var viewType = 0
+        val count = popupListAdapter.itemCount
         for (i in 0 until count) {
             val positionType = popupListAdapter.getItemViewType(i)
-            if (positionType != viewType) {
-                child = null
-                viewType = positionType
-            }
-            child = popupListAdapter.getView(i, child, parent)
+
+            val vh = popupListAdapter.createViewHolder(parent, positionType)
+            popupListAdapter.bindViewHolder(vh, i)
+            val itemView = vh.itemView
 
             // Compute child height spec
             val heightMeasureSpec: Int
-            var childLayoutParams: ViewGroup.LayoutParams? = child.layoutParams
+            var childLp: ViewGroup.LayoutParams? = itemView.layoutParams
 
-            if (childLayoutParams == null) {
-                childLayoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                child.layoutParams = childLayoutParams
+            if (childLp == null) {
+                childLp = generateDefaultLayoutParams()
+                itemView.layoutParams = childLp
             }
 
-            heightMeasureSpec = if (childLayoutParams.height > 0) {
+            heightMeasureSpec = if (childLp.height > 0) {
                 MeasureSpec.makeMeasureSpec(
-                    childLayoutParams.height,
-                    MeasureSpec.EXACTLY
+                    childLp.height,
+                    View.MeasureSpec.EXACTLY
                 )
             } else {
                 MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
             }
-            child.measure(widthMeasureSpec, heightMeasureSpec)
+            itemView.measure(widthMeasureSpec, heightMeasureSpec)
             // Since this view was measured directly against the parent measure
             // spec, we must measure it again before reuse.
-            child.forceLayout()
+            itemView.forceLayout()
 
-            val marginLayoutParams = childLayoutParams as? ViewGroup.MarginLayoutParams
+            val marginLayoutParams = childLp as? ViewGroup.MarginLayoutParams
             val topMargin = marginLayoutParams?.topMargin ?: 0
             val bottomMargin = marginLayoutParams?.bottomMargin ?: 0
             val verticalMargin = topMargin + bottomMargin
 
-            returnedHeight += child.measuredHeight + verticalMargin
+            returnedHeight += itemView.measuredHeight + verticalMargin
 
             if (returnedHeight >= maxHeight) {
                 // We went over, figure out which height to return.  If returnedHeight >
@@ -230,28 +207,29 @@ class BottomActionMenuItemPopup(
      */
     private fun measureMenuSizeAndGetWidth(maxAllowedWidth: Int): Int {
         val parent = FrameLayout(context)
-        var maxWidth = popupMinWidth
-        var itemView: View? = null
-        var itemType = 0
+        var menuWidth = popupMinWidth
 
         val widthMeasureSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
         val heightMeasureSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
-        for (i in 0 until popupListAdapter.count) {
-            val positionType: Int = popupListAdapter.getItemViewType(i)
-            if (positionType != itemType) {
-                itemType = positionType
-                itemView = null
-            }
-            itemView = popupListAdapter.getView(i, itemView, parent)
+
+        val count = popupListAdapter.itemCount
+        for (i in 0 until count) {
+            val positionType = popupListAdapter.getItemViewType(i)
+
+            val vh = popupListAdapter.createViewHolder(parent, positionType)
+            popupListAdapter.bindViewHolder(vh, i)
+            val itemView = vh.itemView
             itemView.measure(widthMeasureSpec, heightMeasureSpec)
+
             val itemWidth = itemView.measuredWidth
             if (itemWidth >= maxAllowedWidth) {
                 return maxAllowedWidth
-            } else if (itemWidth > maxWidth) {
-                maxWidth = itemWidth
+            } else if (itemWidth > menuWidth) {
+                menuWidth = itemWidth
             }
         }
-        return maxWidth
+
+        return menuWidth
     }
 
     private fun makeDropDownMeasureSpec(measureSpec: Int, maxSize: Int): Int {
@@ -273,5 +251,12 @@ class BottomActionMenuItemPopup(
             ViewGroup.LayoutParams.WRAP_CONTENT -> MeasureSpec.UNSPECIFIED
             else -> MeasureSpec.EXACTLY
         }
+    }
+
+    private fun generateDefaultLayoutParams(): RecyclerView.LayoutParams {
+        return RecyclerView.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
     }
 }

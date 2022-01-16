@@ -6,6 +6,7 @@
     android:layout_height="wrap_content"
     android:background="?android:attr/listChoiceBackgroundIndicator"
     android:contentDescription="@null"
+    android:minWidth="@dimen/cab_popup_menu_min_width"
     android:drawablePadding="@dimen/medium_margin"
     android:gravity="center_vertical"
     android:padding="@dimen/normal_margin"
