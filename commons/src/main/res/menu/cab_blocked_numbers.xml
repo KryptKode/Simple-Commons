@@ -1,14 +1,124 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+
     <item
         android:id="@+id/cab_copy_number"
         android:icon="@drawable/ic_copy_vector"
         android:title="@string/copy_number_to_clipboard"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
+
     <item
         android:id="@+id/cab_delete"
         android:icon="@drawable/ic_delete_vector"
         android:title="@string/delete"
         app:showAsAction="ifRoom" />
+
+<!--    <item-->
+<!--        android:id="@+id/cab_delete_2"-->
+<!--        android:icon="@drawable/ic_save_vector"-->
+<!--        android:title="@string/hide"-->
+<!--        app:showAsAction="ifRoom" />-->
+
+<!--    <item-->
+<!--        android:id="@+id/cab_delete_4"-->
+<!--        android:icon="@drawable/ic_usb_vector"-->
+<!--        android:title="@string/usb"-->
+<!--        app:showAsAction="ifRoom" />-->
+
+<!--    <item-->
+<!--        android:id="@+id/cab_delete_09"-->
+<!--        android:icon="@drawable/ic_dollar_vector"-->
+<!--        android:title="@string/block_number"-->
+<!--        app:showAsAction="ifRoom" />-->
+
+<!--    <item-->
+<!--        android:id="@+id/cab_delete_0000"-->
+<!--        android:icon="@drawable/ic_arrow_left_vector"-->
+<!--        android:title="@string/artist"-->
+<!--        app:showAsAction="ifRoom" />-->
+
+<!--    <item-->
+<!--        android:id="@+id/cab_delete_6"-->
+<!--        android:icon="@drawable/ic_file_aep"-->
+<!--        android:title="@string/file"-->
+<!--        app:showAsAction="never" />-->
+
+<!--    <item-->
+<!--        android:id="@+id/cab_delete_7"-->
+<!--        android:icon="@drawable/ic_vibrate_vector"-->
+<!--        android:title="@string/alarm"-->
+<!--        app:showAsAction="never" />-->
+
+<!--    <item-->
+<!--        android:id="@+id/cab_ic_vibrate_vector"-->
+<!--        android:icon="@drawable/ic_clock_vector"-->
+<!--        android:title="@string/clock_short"-->
+<!--        app:showAsAction="never" />-->
+
+<!--    <item-->
+<!--        android:id="@+id/cab_ic_business_vector"-->
+<!--        android:icon="@drawable/ic_business_vector"-->
+<!--        android:title="@string/title"-->
+<!--        app:showAsAction="never" />-->
+
+<!--    <item-->
+<!--        android:id="@+id/cab_ic_copy_vector_2"-->
+<!--        android:icon="@drawable/ic_add_person_vector"-->
+<!--        android:title="@string/call_person"-->
+<!--        app:showAsAction="never" />-->
+
+<!--    <item-->
+<!--        android:id="@+id/cab_ic_cross_vector"-->
+<!--        android:icon="@drawable/ic_cross_vector"-->
+<!--        android:title="@string/redo"-->
+<!--        app:showAsAction="never" />-->
+
+<!--    <item-->
+<!--        android:id="@+id/cab_ic_reddit_vector"-->
+<!--        android:icon="@drawable/ic_redo_vector"-->
+<!--        android:title="@string/reddit"-->
+<!--        app:showAsAction="never" />-->
+
+<!--    <item-->
+<!--        android:id="@+id/cab_ic_code"-->
+<!--        android:icon="@drawable/ic_code_vector"-->
+<!--        android:title="@string/always"-->
+<!--        app:showAsAction="never" />-->
+
+<!--    <item-->
+<!--        android:id="@+id/cab_ic_die"-->
+<!--        android:icon="@drawable/ic_copy_vector"-->
+<!--        android:title="@string/copy"-->
+<!--        app:showAsAction="never" />-->
+
+<!--    <item-->
+<!--        android:id="@+id/cab_ic_dude"-->
+<!--        android:icon="@drawable/ic_bell_vector"-->
+<!--        android:title="@string/donate"-->
+<!--        app:showAsAction="never" />-->
+
+<!--    <item-->
+<!--        android:id="@+id/cab_ic_dude2"-->
+<!--        android:icon="@drawable/ic_attach_file_vector"-->
+<!--        android:title="@string/move_to"-->
+<!--        app:showAsAction="never" />-->
+
+<!--    <item-->
+<!--        android:id="@+id/cab_ic_dude4"-->
+<!--        android:icon="@drawable/ic_attach_file_vector"-->
+<!--        android:title="@string/move_to"-->
+<!--        app:showAsAction="never" />-->
+
+<!--    <item-->
+<!--        android:id="@+id/cab_ic_dude5"-->
+<!--        android:icon="@drawable/ic_attach_file_vector"-->
+<!--        android:title="@string/move_to"-->
+<!--        app:showAsAction="never" />-->
+
+<!--    <item-->
+<!--        android:id="@+id/cab_ic_dude6"-->
+<!--        android:icon="@drawable/ic_attach_file_vector"-->
+<!--        android:title="@string/move_to"-->
+<!--        app:showAsAction="never" />-->
 </menu>

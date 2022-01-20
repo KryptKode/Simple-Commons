@@ -5,10 +5,7 @@ import android.graphics.Color
 import android.graphics.Rect
 import android.view.*
 import android.view.View.MeasureSpec
-import android.widget.ArrayAdapter
-import android.widget.FrameLayout
-import android.widget.ListView
-import android.widget.PopupWindow
+import android.widget.*
 import androidx.core.content.ContextCompat
 import androidx.core.widget.PopupWindowCompat
 import com.simplemobiletools.commons.R
@@ -92,7 +89,7 @@ class BottomActionMenuItemPopup(
         anchorView.getLocationInWindow(anchorLocation)
         x += anchorLocation[0]
 
-        y += anchorView.height * 2
+        y += anchorView.height * 2 + 15
         x -= dropDownWidth - anchorView.width
 
         popup.showAtLocation(contentView, Gravity.BOTTOM, x, y)
@@ -111,10 +108,11 @@ class BottomActionMenuItemPopup(
             divider = null
             isFocusableInTouchMode = true
             clipToPadding = false
-            isVerticalScrollBarEnabled = true
+            isVerticalScrollBarEnabled = false
             isHorizontalScrollBarEnabled = false
             clipToOutline = true
             elevation = 3f
+            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
             setPaddingRelative(popupPaddingStart, popupPaddingTop, popupPaddingEnd, popupPaddingBottom)
         }
 
@@ -166,6 +164,7 @@ class BottomActionMenuItemPopup(
      */
     private fun measureHeightOfChildrenCompat(maxHeight: Int): Int {
         val parent = FrameLayout(context)
+
         val widthMeasureSpec = MeasureSpec.makeMeasureSpec(dropDownWidth, MeasureSpec.EXACTLY)
 
         // Include the padding of the list
@@ -230,6 +229,7 @@ class BottomActionMenuItemPopup(
      */
     private fun measureMenuSizeAndGetWidth(maxAllowedWidth: Int): Int {
         val parent = FrameLayout(context)
+
         var maxWidth = popupMinWidth
         var itemView: View? = null
         var itemType = 0
@@ -244,7 +244,14 @@ class BottomActionMenuItemPopup(
             }
             itemView = popupListAdapter.getView(i, itemView, parent)
             itemView.measure(widthMeasureSpec, heightMeasureSpec)
+            val bounds = Rect()
+            itemView as TextView
+            itemView.paint.getTextBounds(itemView.text.toString(), 0, itemView.text.length, bounds)
+
+            val widthBounds = bounds.width()
+            val widthFromPaint = itemView.paint.measureText(itemView.text.toString())
             val itemWidth = itemView.measuredWidth
+
             if (itemWidth >= maxAllowedWidth) {
                 return maxAllowedWidth
             } else if (itemWidth > maxWidth) {

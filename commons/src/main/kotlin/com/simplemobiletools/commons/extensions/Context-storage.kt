@@ -447,6 +447,7 @@ fun Context.updateInMediaStore(oldPath: String, newPath: String) {
         try {
             contentResolver.update(uri, values, selection, selectionArgs)
         } catch (ignored: Exception) {
+            ignored.printStackTrace()
         }
     }
 }

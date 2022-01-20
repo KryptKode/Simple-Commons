@@ -54,10 +54,10 @@ class BottomActionMenuPopup(private val activity: BaseSimpleActivity, items: Lis
     }
 
     fun dismiss() {
-        popup.dismiss()
         underlayView?.let {
             adjustUnderlayViewBottomMargin(it, false)
         }
+        popup.dismiss()
     }
 
     private fun findFABAndHide() {
