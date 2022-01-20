@@ -8,6 +8,7 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.media.RingtoneManager
 import android.net.Uri
+import android.os.Environment
 import android.os.TransactionTooLargeException
 import android.provider.ContactsContract
 import android.provider.DocumentsContract
@@ -114,7 +115,7 @@ fun Activity.isAppInstalledOnSDCard(): Boolean = try {
 }
 
 fun BaseSimpleActivity.isShowingSAFDialog(path: String): Boolean {
-    return if ((!isRPlus() && isPathOnSD(path) && !isSDCardSetAsDefaultStorage() && (baseConfig.sdTreeUri.isEmpty() || !hasProperStoredTreeUri(false)))) {
+    return if (canRequestSAFDialog() && (isPathOnSD(path) && !isSDCardSetAsDefaultStorage() && (baseConfig.sdTreeUri.isEmpty() || !hasProperStoredTreeUri(false)))) {
         runOnUiThread {
             if (!isDestroyed && !isFinishing) {
                 WritePermissionDialog(this, false) {
@@ -141,6 +142,14 @@ fun BaseSimpleActivity.isShowingSAFDialog(path: String): Boolean {
         true
     } else {
         false
+    }
+}
+
+fun canRequestSAFDialog(): Boolean {
+    return if (isRPlus()) {
+        !Environment.isExternalStorageManager()
+    } else {
+        true
     }
 }
 
@@ -745,6 +754,7 @@ fun BaseSimpleActivity.renameFile(
                     callback?.invoke(success, false)
                 }
             } catch (e: Exception) {
+                e.printStackTrace()
                 showErrorToast(e)
                 runOnUiThread {
                     callback?.invoke(false, false)
@@ -772,6 +782,7 @@ fun BaseSimpleActivity.renameFile(
                     } catch (ignored: FileNotFoundException) {
                         // FileNotFoundException is thrown in some weird cases, but renaming works just fine
                     } catch (e: Exception) {
+                        e.printStackTrace()
                         showErrorToast(e)
                         callback?.invoke(false, false)
                         return@ensureBackgroundThread
@@ -789,6 +800,7 @@ fun BaseSimpleActivity.renameFile(
                     }
                 }
             } catch (e: Exception) {
+                e.printStackTrace()
                 showErrorToast(e)
                 runOnUiThread {
                     callback?.invoke(false, false)
@@ -817,6 +829,7 @@ fun BaseSimpleActivity.renameFile(
                                 contentResolver.update(fileUris.first(), values, null, null)
                                 callback?.invoke(true, false)
                             } catch (e: Exception) {
+                                e.printStackTrace()
                                 showErrorToast(e)
                                 callback?.invoke(false, false)
                             }
@@ -826,6 +839,7 @@ fun BaseSimpleActivity.renameFile(
                     }
                 }
             } else {
+                exception.printStackTrace()
                 showErrorToast(exception)
                 callback?.invoke(false, false)
             }
