@@ -270,9 +270,7 @@ abstract class BaseSimpleActivity : AppCompatActivity() {
                 val checkedUri = createFirstParentTreeUri(checkedDocumentPath)
 
                 if (treeUri != checkedUri) {
-                    val level = getFirstParentLevel(checkedDocumentPath)
-                    val firstParentPath = checkedDocumentPath.getFirstParentPath(this, level)
-                    toast(getString(R.string.wrong_folder_selected, humanizePath(firstParentPath)))
+                    toast(getString(R.string.wrong_folder_selected, checkedDocumentPath.getFirstParentPath(this)))
                     return
                 }
 

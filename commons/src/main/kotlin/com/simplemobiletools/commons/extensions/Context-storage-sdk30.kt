@@ -7,17 +7,11 @@ import android.provider.DocumentsContract
 import androidx.documentfile.provider.DocumentFile
 import com.simplemobiletools.commons.helpers.EXTERNAL_STORAGE_PROVIDER_AUTHORITY
 import com.simplemobiletools.commons.helpers.isRPlus
-import com.simplemobiletools.commons.helpers.isSPlus
 import com.simplemobiletools.commons.models.FileDirItem
 import java.io.File
 
 private const val DOWNLOAD_DIR = "Download"
-private const val ANDROID_DIR = "Android"
-private val DIRS_INACCESSIBLE_WITH_SAF_SDK_30 = if (isSPlus()) {
-    listOf(DOWNLOAD_DIR, ANDROID_DIR)
-} else {
-    listOf(DOWNLOAD_DIR)
-}
+val DIRS_INACCESSIBLE_WITH_SAF_SDK_30 = listOf(DOWNLOAD_DIR)
 
 fun Context.hasProperStoredFirstParentUri(path: String): Boolean {
     val firstParentUri = createFirstParentTreeUri(path)
@@ -25,71 +19,22 @@ fun Context.hasProperStoredFirstParentUri(path: String): Boolean {
 }
 
 fun Context.isAccessibleWithSAFSdk30(path: String): Boolean {
-    if (path.startsWith(recycleBinPath) || isExternalStorageManager()) {
-        return false
-    }
-
-    val level = getFirstParentLevel(path)
-    val firstParentDir =  path.getFirstParentDirName(this, level)
-    val firstParentPath =  path.getFirstParentPath(this, level)
-
-    val isValidName = firstParentDir != null
-    val isDirectory = File(firstParentPath).isDirectory
-    val isAnAccessibleDirectory = DIRS_INACCESSIBLE_WITH_SAF_SDK_30.all { !firstParentDir.equals(it, true) }
-    return isValidName && isDirectory && isAnAccessibleDirectory
-}
-
-fun Context.getFirstParentLevel(path: String): Int {
-    return when {
-        isSPlus() && (isInAndroidDir(path) || isInDownloadDir(path)) -> 1
-        isRPlus() && isInDownloadDir(path) -> 1
-        else -> 0
-    }
-}
-
-fun Context.isRestrictedWithSAFSdk30(path: String): Boolean {
-    if (path.startsWith(recycleBinPath) || isExternalStorageManager()) {
-        return true
-    }
-
-    val level = getFirstParentLevel(path)
-    val firstParentDir =  path.getFirstParentDirName(this, level)
-    val firstParentPath =  path.getFirstParentPath(this, level)
-
-    val isInvalidName = firstParentDir == null
-    val isDirectory = File(firstParentPath).isDirectory
-    val isARestrictedDirectory = DIRS_INACCESSIBLE_WITH_SAF_SDK_30.any { firstParentDir.equals(it, true) }
-    return isInvalidName || (isDirectory && isARestrictedDirectory)
-}
-
-fun Context.isInDownloadDir(path: String): Boolean {
     if (path.startsWith(recycleBinPath)) {
         return false
     }
-    val firstParentDir = path.getFirstParentDirName(this, 0)
-    return firstParentDir.equals(DOWNLOAD_DIR, true)
-}
 
-fun Context.isInAndroidDir(path: String): Boolean {
-    if (path.startsWith(recycleBinPath)) {
-        return false
-    }
-    val firstParentDir = path.getFirstParentDirName(this, 0)
-    return firstParentDir.equals(ANDROID_DIR, true)
-}
+    val firstParentPath = path.getFirstParentPath(this)
+    val firstParentDir = path.getFirstParentDirName(this)
 
-fun isNotExternalStorageManager(): Boolean {
-    return isRPlus() && !Environment.isExternalStorageManager()
-}
-
-fun isExternalStorageManager(): Boolean {
-    return isRPlus() && Environment.isExternalStorageManager()
+    return isRPlus() && !Environment.isExternalStorageManager() && File(firstParentPath).isDirectory &&
+        DIRS_INACCESSIBLE_WITH_SAF_SDK_30.all {
+            firstParentDir != it
+        }
 }
 
 fun Context.createFirstParentTreeUriUsingRootTree(fullPath: String): Uri {
     val storageId = getSAFStorageId(fullPath)
-    val level = getFirstParentLevel(fullPath)
-    val rootParentDirName = fullPath.getFirstParentDirName(this, level)
+    val rootParentDirName = fullPath.getFirstParentDirName(this)
     val treeUri = DocumentsContract.buildTreeDocumentUri(EXTERNAL_STORAGE_PROVIDER_AUTHORITY, "$storageId:")
     val documentId = "${storageId}:$rootParentDirName"
     return DocumentsContract.buildDocumentUriUsingTree(treeUri, documentId)
@@ -97,8 +42,7 @@ fun Context.createFirstParentTreeUriUsingRootTree(fullPath: String): Uri {
 
 fun Context.createFirstParentTreeUri(fullPath: String): Uri {
     val storageId = getSAFStorageId(fullPath)
-    val level = getFirstParentLevel(fullPath)
-    val rootParentDirName = fullPath.getFirstParentDirName(this, level)
+    val rootParentDirName = fullPath.getFirstParentDirName(this)
     val firstParentId = "$storageId:$rootParentDirName"
     return DocumentsContract.buildTreeDocumentUri(EXTERNAL_STORAGE_PROVIDER_AUTHORITY, firstParentId)
 }
@@ -170,8 +114,7 @@ fun Context.getFastDocumentSdk30(path: String): DocumentFile? {
 }
 
 fun Context.getDocumentSdk30(path: String): DocumentFile? {
-    val level = getFirstParentLevel(path)
-    val firstParentPath = path.getFirstParentPath(this, level)
+    val firstParentPath = path.getFirstParentPath(this)
     var relativePath = path.substring(firstParentPath.length)
     if (relativePath.startsWith(File.separator)) {
         relativePath = relativePath.substring(1)
